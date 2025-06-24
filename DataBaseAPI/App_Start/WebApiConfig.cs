@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using System.Web.Http.Cors;
 
 namespace DataBaseAPI
 {
@@ -9,7 +10,9 @@ namespace DataBaseAPI
     {
         public static void Register(HttpConfiguration config)
         {
-            // Configuração e serviços de API Web
+            // Habilita CORS globalmente
+            var cors = new EnableCorsAttribute(origins: "*", headers: "*", methods: "*");
+            config.EnableCors(cors);
 
             // Rotas de API Web
             config.MapHttpAttributeRoutes();

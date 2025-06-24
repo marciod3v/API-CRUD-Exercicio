@@ -21,14 +21,14 @@ namespace DataBaseAPI.Repositories
         }
         public async Task<List<Models.Funcionario>> GetAllFuncionarios()
 		{
-            List<Models.Funcionario> funcionarios = null;
+            List<Models.Funcionario> funcionarios = new List<Funcionario>();
 
             using (conn)
             {
                 await conn.OpenAsync();
                 using (cmd)
                 {
-                    cmd.CommandText = "SELECT Codigo,CodigoDepartamento,PrimeiroNome,SegundoNome,UltimoNome,DataNascimento,CPF,Endereco,CEP,Cidade,Telefone,Funcao,Salario FROM Funcionario;";
+                    cmd.CommandText = "SELECT Codigo,CodigoDepartamento,PrimeiroNome,SegundoNome,UltimoNome,DataNascimento,CPF,RG,Endereco,CEP,Cidade,Fone,Funcao,Salario FROM Funcionario;";
                     SqlDataReader dr = cmd.ExecuteReader();
 
 
@@ -52,13 +52,15 @@ namespace DataBaseAPI.Repositories
 
                             CPF = dr.GetString(dr.GetOrdinal("CPF")),
 
+                            RG = dr.GetString(dr.GetOrdinal("RG")),
+
                             Endereco = dr.GetString(dr.GetOrdinal("Endereco")),
 
                             CEP = dr.GetString(dr.GetOrdinal("CEP")),
 
                             Cidade = dr.GetString(dr.GetOrdinal("Cidade")),
 
-                            Telefone = dr.IsDBNull(dr.GetOrdinal("Telefone")) ? null : dr.GetString(dr.GetOrdinal("Telefone")),
+                            Fone = dr.IsDBNull(dr.GetOrdinal("Fone")) ? null : dr.GetString(dr.GetOrdinal("Fone")),
 
                             Funcao = dr.GetString(dr.GetOrdinal("Funcao")),
 
@@ -78,7 +80,7 @@ namespace DataBaseAPI.Repositories
                 await conn.OpenAsync();
                 using (cmd)
                 {
-                    cmd.CommandText = "SELECT Codigo,CodigoDepartamento,PrimeiroNome,SegundoNome,UltimoNome,DataNascimento,CPF,Endereco,CEP,Cidade,Telefone,Funcao,Salario FROM Funcionario WHERE Codigo = @Id;";
+                    cmd.CommandText = "SELECT Codigo,CodigoDepartamento,PrimeiroNome,SegundoNome,UltimoNome,DataNascimento,CPF,RG,Endereco,CEP,Cidade,Fone,Funcao,Salario FROM Funcionario WHERE Codigo = @Id;";
                     cmd.Parameters.AddWithValue("@Id", id);
                     SqlDataReader dr = cmd.ExecuteReader();
 
@@ -93,10 +95,11 @@ namespace DataBaseAPI.Repositories
                             UltimoNome = dr.GetString(dr.GetOrdinal("UltimoNome")),
                             DataNascimento = dr.GetDateTime(dr.GetOrdinal("DataNascimento")),
                             CPF = dr.GetString(dr.GetOrdinal("CPF")),
+                            RG = dr.GetString(dr.GetOrdinal("RG")),
                             Endereco = dr.GetString(dr.GetOrdinal("Endereco")),
                             CEP = dr.GetString(dr.GetOrdinal("CEP")),
                             Cidade = dr.GetString(dr.GetOrdinal("Cidade")),
-                            Telefone = dr.IsDBNull(dr.GetOrdinal("Telefone")) ? null : dr.GetString(dr.GetOrdinal("Telefone")),
+                            Fone = dr.IsDBNull(dr.GetOrdinal("Fone")) ? null : dr.GetString(dr.GetOrdinal("Fone")),
                             Funcao = dr.GetString(dr.GetOrdinal("Funcao")),
                             Salario = dr.GetDecimal(dr.GetOrdinal("Salario"))
                         };
@@ -109,6 +112,46 @@ namespace DataBaseAPI.Repositories
             }
         }
     
+        public async Task<List<Models.Funcionario>> GetFuncionarioByName(string nome)
+        {
+            List<Models.Funcionario> funcionarios = new List<Funcionario>();
+
+            using (conn)
+            {
+                await conn.OpenAsync();
+                using (cmd)
+                {
+                    cmd.CommandText = "SELECT Codigo,CodigoDepartamento,PrimeiroNome,SegundoNome,UltimoNome,DataNascimento,CPF,RG,Endereco,CEP,Cidade,Fone,Funcao,Salario FROM Funcionario WHERE PrimeiroNome LIKE '%' + @nome + '%';";
+                    cmd.Parameters.AddWithValue("@nome", nome);
+                    SqlDataReader dr = cmd.ExecuteReader();
+                   
+                    while (dr.Read())
+                    {
+                        funcionarios.Add(new Models.Funcionario
+                        {
+                            Codigo = dr.GetInt32(dr.GetOrdinal("Codigo")),
+                            CodigoDepartamento = dr.GetInt32(dr.GetOrdinal("CodigoDepartamento")),
+                            PrimeiroNome = dr.GetString(dr.GetOrdinal("PrimeiroNome")),
+                            SegundoNome = dr.IsDBNull(dr.GetOrdinal("SegundoNome")) ? null : dr.GetString(dr.GetOrdinal("SegundoNome")),
+                            UltimoNome = dr.GetString(dr.GetOrdinal("UltimoNome")),
+                            DataNascimento = dr.GetDateTime(dr.GetOrdinal("DataNascimento")),
+                            CPF = dr.GetString(dr.GetOrdinal("CPF")),
+                            RG = dr.GetString(dr.GetOrdinal("RG")),
+                            Endereco = dr.GetString(dr.GetOrdinal("Endereco")),
+                            CEP = dr.GetString(dr.GetOrdinal("CEP")),
+                            Cidade = dr.GetString(dr.GetOrdinal("Cidade")),
+                            Fone = dr.IsDBNull(dr.GetOrdinal("Fone")) ? null : dr.GetString(dr.GetOrdinal("Fone")),
+                            Funcao = dr.GetString(dr.GetOrdinal("Funcao")),
+                            Salario = dr.GetDecimal(dr.GetOrdinal("Salario"))
+                        });
+
+                        return funcionarios;
+                    }
+
+                    return null;
+                }
+            }
+        }
         public async Task<bool> CreateFuncionario(Models.Funcionario funcionario)
         {
             using (conn)
@@ -118,8 +161,8 @@ namespace DataBaseAPI.Repositories
                 {
                     cmd.CommandText =
 
-                    "INSERT INTO Funcionario (CodigoDepartamento,PrimeiroNome,SegundoNome,UltimoNome,DataNascimento,CPF,Endereco,CEP,Cidade,Telefone,Funcao,Salario) " +
-                    "VALUES (@CodigoDepartamento,@PrimeiroNome,@SegundoNome,@UltimoNome,@DataNascimento,@CPF,@Endereco,@CEP,@Cidade,@Telefone,@Funcao,@Salario);";
+                    "INSERT INTO Funcionario (CodigoDepartamento,PrimeiroNome,SegundoNome,UltimoNome,DataNascimento,CPF,RG,Endereco,CEP,Cidade,Fone,Funcao,Salario) " +
+                    "VALUES (@CodigoDepartamento,@PrimeiroNome,@SegundoNome,@UltimoNome,@DataNascimento,@CPF,@RG,@Endereco,@CEP,@Cidade,@Fone,@Funcao,@Salario);";
 
                     cmd.Parameters.AddWithValue("@CodigoDepartamento", funcionario.CodigoDepartamento);
                     cmd.Parameters.AddWithValue("@PrimeiroNome", funcionario.PrimeiroNome);
@@ -127,10 +170,11 @@ namespace DataBaseAPI.Repositories
                     cmd.Parameters.AddWithValue("@UltimoNome", funcionario.UltimoNome);
                     cmd.Parameters.AddWithValue("@DataNascimento", funcionario.DataNascimento);
                     cmd.Parameters.AddWithValue("@CPF", funcionario.CPF);
+                    cmd.Parameters.AddWithValue("@RG", funcionario.RG);
                     cmd.Parameters.AddWithValue("@Endereco", funcionario.Endereco);
                     cmd.Parameters.AddWithValue("@CEP", funcionario.CEP);
                     cmd.Parameters.AddWithValue("@Cidade", funcionario.Cidade);
-                    cmd.Parameters.AddWithValue("@Telefone", funcionario.Telefone);
+                    cmd.Parameters.AddWithValue("@Fone", funcionario.Fone);
                     cmd.Parameters.AddWithValue("@Funcao", funcionario.Funcao);
                     cmd.Parameters.AddWithValue("@Salario", funcionario.Salario);
 
@@ -152,7 +196,7 @@ namespace DataBaseAPI.Repositories
                 using (cmd)
                 {
                     cmd.CommandText = "UPDATE Funcionario SET " +
-                         "CodigoDepartamento = @CodigoDepartamento,PrimeiroNome = @PrimeiroNome,SegundoNome = @SegundoNome,UltimoNome = @UltimoNome,DataNascimento = @DataNascimento,CPF = @CPF,Endereco = @Endereco,CEP = @CEP,Cidade = @Cidade,Telefone = @Telefone,Funcao = @Funcao, Salario = @Salario";
+                         "CodigoDepartamento = @CodigoDepartamento,PrimeiroNome = @PrimeiroNome,SegundoNome = @SegundoNome,UltimoNome = @UltimoNome,DataNascimento = @DataNascimento,CPF = @CPF,RG = @RG,Endereco = @Endereco,CEP = @CEP,Cidade = @Cidade,Fone = @Fone,Funcao = @Funcao, Salario = @Salario";
 
                     cmd.Parameters.AddWithValue("@CodigoDepartamento", funcionario.CodigoDepartamento);
                     cmd.Parameters.AddWithValue("@PrimeiroNome", funcionario.PrimeiroNome);
@@ -160,10 +204,11 @@ namespace DataBaseAPI.Repositories
                     cmd.Parameters.AddWithValue("@UltimoNome", funcionario.UltimoNome);
                     cmd.Parameters.AddWithValue("@DataNascimento", funcionario.DataNascimento);
                     cmd.Parameters.AddWithValue("@CPF", funcionario.CPF);
+                    cmd.Parameters.AddWithValue("@RG", funcionario.RG);
                     cmd.Parameters.AddWithValue("@Endereco", funcionario.Endereco);
                     cmd.Parameters.AddWithValue("@CEP", funcionario.CEP);
                     cmd.Parameters.AddWithValue("@Cidade", funcionario.Cidade);
-                    cmd.Parameters.AddWithValue("@Telefone", funcionario.Telefone);
+                    cmd.Parameters.AddWithValue("@Fone", funcionario.Fone);
                     cmd.Parameters.AddWithValue("@Funcao", funcionario.Funcao);
                     cmd.Parameters.AddWithValue("@Salario", funcionario.Salario);
 

@@ -12,10 +12,12 @@ using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.Cors;
 using System.Web.Routing;
 
 namespace DataBaseAPI.Controllers
 {
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class CarrosController : ApiController
     {
         readonly string logPath = ConfigurationManager.AppSettings["logPath"] + @"\logCarros.txt";
@@ -27,7 +29,7 @@ namespace DataBaseAPI.Controllers
         }
 
         [HttpGet]
-        [Route("api/carros")]
+        [Route("api/getcarros")]
         public async Task<IHttpActionResult> Get()
         {
             try
@@ -88,11 +90,16 @@ namespace DataBaseAPI.Controllers
 
         // POST: api/Carros
         [HttpPost]
-        [Route("api/carros")]
+        [Route("api/postcarros")]
         public async Task<IHttpActionResult> Post([FromBody]Models.Carro carro)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest("ERRO: Dados inseridos incorretamente");
+                }
+
                 if (await CarroRepository.PostCarro(carro))
                 {
                     return Ok("Registro criado com sucesso");
@@ -130,7 +137,7 @@ namespace DataBaseAPI.Controllers
 
         // DELETE: api/Carros/5
         [HttpDelete]
-        [Route("api/carros/{id}")]
+        [Route("api/carros/delete/{id}")]
         public async Task<IHttpActionResult> Delete(int id)
         {
             try
